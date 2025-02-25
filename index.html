@@ -78,22 +78,38 @@
     </footer>
 
     <script>
-        async function fetchClimateData() {
-            try {
-                let response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current_weather=true');
-                let data = await response.json();
-                
-                document.getElementById('temp').innerText = data.current_weather.temperature + '°C';
-                document.getElementById('co2').innerText = '418 ppm'; // Static placeholder since CO2 levels require different APIs
-                document.getElementById('ice').innerText = '-13% per decade'; // Static placeholder
-            } catch (error) {
-                console.error('Error fetching climate data:', error);
-                document.getElementById('temp').innerText = 'Data unavailable';
-                document.getElementById('co2').innerText = 'Data unavailable';
-                document.getElementById('ice').innerText = 'Data unavailable';
+        function fetchClimateData(lat, lon) {
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('temp').innerText = data.current_weather.temperature + '°C';
+                    document.getElementById('co2').innerText = '418 ppm'; // Placeholder
+                    document.getElementById('ice').innerText = '-13% per decade'; // Placeholder
+                })
+                .catch(error => {
+                    console.error('Error fetching climate data:', error);
+                    document.getElementById('temp').innerText = 'Data unavailable';
+                    document.getElementById('co2').innerText = 'Data unavailable';
+                    document.getElementById('ice').innerText = 'Data unavailable';
+                });
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => fetchClimateData(position.coords.latitude, position.coords.longitude),
+                    error => {
+                        console.error('Geolocation error:', error);
+                        fetchClimateData(0, 0); // Default to equator if location access denied
+                    }
+                );
+            } else {
+                console.error('Geolocation not supported');
+                fetchClimateData(0, 0); // Default to equator
             }
         }
-        fetchClimateData();
+        
+        getLocation();
     </script>
 </body>
 </html>
