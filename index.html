@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Change Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: white;
+        }
+        header {
+            background-color: rgba(44, 62, 80, 0.9);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+            color: black;
+        }
+        .tracker {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 2px solid #2c3e50;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .tracker:last-child {
+            border-bottom: none;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Climate Change Tracker</h1>
+        <p>Stay updated on environmental changes worldwide</p>
+    </header>
+    
+    <div class="container">
+        <h2>Latest Climate Data</h2>
+        <div class="tracker">
+            <span>Global Temperature Increase</span>
+            <span id="temp">Loading...</span>
+        </div>
+        <div class="tracker">
+            <span>CO2 Levels</span>
+            <span id="co2">Loading...</span>
+        </div>
+        <div class="tracker">
+            <span>Arctic Ice Melt</span>
+            <span id="ice">Loading...</span>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2024 Climate Change Tracker. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        async function fetchClimateData() {
+            try {
+                let response = await fetch('https://api.climatiq.io/data/latest', {
+                    headers: { 'Authorization': 'Bearer Q144FNRTQH76Q21R9W8EY786P0' }
+                });
+                let data = await response.json();
+                
+                document.getElementById('temp').innerText = data.global_temperature + '°C';
+                document.getElementById('co2').innerText = data.co2_levels + ' ppm';
+                document.getElementById('ice').innerText = data.arctic_ice_melt + '% per decade';
+            } catch (error) {
+                console.error('Error fetching climate data:', error);
+                document.getElementById('temp').innerText = 'Data unavailable';
+                document.getElementById('co2').innerText = 'Data unavailable';
+                document.getElementById('ice').innerText = 'Data unavailable';
+            }
+        }
+        fetchClimateData();
+    </script>
+</body>
+</html>
