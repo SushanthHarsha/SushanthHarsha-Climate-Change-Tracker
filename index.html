@@ -80,8 +80,11 @@
     <script>
         async function fetchClimateData() {
             try {
-                let response = await fetch('https://api.climatiq.io/data/latest', {
-                    headers: { 'Authorization': 'Bearer Q144FNRTQH76Q21R9W8EY786P0' }
+                let response = await fetch('https://api.climatiq.io/v1/search', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer Q144FNRTQH76Q21R9W8EY786P0'
+                    }
                 });
                 let data = await response.json();
                 
