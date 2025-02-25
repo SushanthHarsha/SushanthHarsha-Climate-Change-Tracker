@@ -97,15 +97,26 @@
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    position => fetchClimateData(position.coords.latitude, position.coords.longitude),
+                    position => {
+                        fetchClimateData(position.coords.latitude, position.coords.longitude);
+                        setInterval(() => {
+                            fetchClimateData(position.coords.latitude, position.coords.longitude);
+                        }, 300000); // Refresh every 5 minutes
+                    },
                     error => {
                         console.error('Geolocation error:', error);
                         fetchClimateData(0, 0); // Default to equator if location access denied
+                        setInterval(() => {
+                            fetchClimateData(0, 0);
+                        }, 300000);
                     }
                 );
             } else {
                 console.error('Geolocation not supported');
-                fetchClimateData(0, 0); // Default to equator
+                fetchClimateData(0, 0);
+                setInterval(() => {
+                    fetchClimateData(0, 0);
+                }, 300000);
             }
         }
         
