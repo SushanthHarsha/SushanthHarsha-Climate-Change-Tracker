@@ -60,7 +60,7 @@
     <div class="container">
         <h2>Latest Climate Data</h2>
         <div class="tracker">
-            <span>Global Temperature Increase</span>
+            <span>Global Temperature</span>
             <span id="temp">Loading...</span>
         </div>
         <div class="tracker">
@@ -78,49 +78,61 @@
     </footer>
 
     <script>
-        function fetchClimateData(lat, lon) {
-            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('temp').innerText = data.current_weather.temperature + '°C';
-                    document.getElementById('co2').innerText = '418 ppm'; // Placeholder
-                    document.getElementById('ice').innerText = '-13% per decade'; // Placeholder
-                })
-                .catch(error => {
-                    console.error('Error fetching climate data:', error);
-                    document.getElementById('temp').innerText = 'Data unavailable';
-                    document.getElementById('co2').innerText = 'Data unavailable';
-                    document.getElementById('ice').innerText = 'Data unavailable';
-                });
+        async function fetchClimateData(lat, lon) {
+            try {
+                // Fetch temperature data
+                let weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                let weatherData = await weatherResponse.json();
+                document.getElementById('temp').innerText = weatherData.current_weather.temperature + '°C';
+            } catch (error) {
+                console.error('Error fetching temperature data:', error);
+                document.getElementById('temp').innerText = 'Data unavailable';
+            }
+
+            try {
+                // Fetch CO2 level data
+                let co2Response = await fetch('https://api.v2.emissions-api.org/api/v2/carbonmonoxide/average.json?country=USA');
+                let co2Data = await co2Response.json();
+                document.getElementById('co2').innerText = co2Data[0]?.value + ' ppm';
+            } catch (error) {
+                console.error('Error fetching CO2 data:', error);
+                document.getElementById('co2').innerText = 'Data unavailable';
+            }
+
+            try {
+                // Fetch Arctic Ice Melt data
+                let iceResponse = await fetch('https://global-warming.org/api/arctic-api');
+                let iceData = await iceResponse.json();
+                document.getElementById('ice').innerText = iceData.result[0]?.arctic_data + '% decrease';
+            } catch (error) {
+                console.error('Error fetching Arctic Ice data:', error);
+                document.getElementById('ice').innerText = 'Data unavailable';
+            }
         }
 
-        function getLocation() {
+        function requestLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     position => {
-                        fetchClimateData(position.coords.latitude, position.coords.longitude);
-                        setInterval(() => {
-                            fetchClimateData(position.coords.latitude, position.coords.longitude);
-                        }, 300000); // Refresh every 5 minutes
+                        let lat = position.coords.latitude;
+                        let lon = position.coords.longitude;
+                        fetchClimateData(lat, lon);
+                        setInterval(() => fetchClimateData(lat, lon), 300000); // Refresh every 5 minutes
                     },
                     error => {
-                        console.error('Geolocation error:', error);
-                        fetchClimateData(0, 0); // Default to equator if location access denied
-                        setInterval(() => {
-                            fetchClimateData(0, 0);
-                        }, 300000);
+                        console.warn('Location access denied. Using default location.');
+                        fetchClimateData(37.7749, -122.4194); // Default: San Francisco
+                        setInterval(() => fetchClimateData(37.7749, -122.4194), 300000);
                     }
                 );
             } else {
-                console.error('Geolocation not supported');
-                fetchClimateData(0, 0);
-                setInterval(() => {
-                    fetchClimateData(0, 0);
-                }, 300000);
+                console.warn('Geolocation not supported. Using default location.');
+                fetchClimateData(37.7749, -122.4194); // Default: San Francisco
+                setInterval(() => fetchClimateData(37.7749, -122.4194), 300000);
             }
         }
         
-        getLocation();
+        window.onload = requestLocation;
     </script>
 </body>
 </html>
