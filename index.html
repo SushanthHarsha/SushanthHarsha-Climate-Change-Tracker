@@ -80,17 +80,12 @@
     <script>
         async function fetchClimateData() {
             try {
-                let response = await fetch('https://api.climatiq.io/v1/search', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer Q144FNRTQH76Q21R9W8EY786P0'
-                    }
-                });
+                let response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current_weather=true');
                 let data = await response.json();
                 
-                document.getElementById('temp').innerText = data.global_temperature + '°C';
-                document.getElementById('co2').innerText = data.co2_levels + ' ppm';
-                document.getElementById('ice').innerText = data.arctic_ice_melt + '% per decade';
+                document.getElementById('temp').innerText = data.current_weather.temperature + '°C';
+                document.getElementById('co2').innerText = '418 ppm'; // Static placeholder since CO2 levels require different APIs
+                document.getElementById('ice').innerText = '-13% per decade'; // Static placeholder
             } catch (error) {
                 console.error('Error fetching climate data:', error);
                 document.getElementById('temp').innerText = 'Data unavailable';
