@@ -79,9 +79,10 @@
 
     <script>
         async function fetchClimateData(lat, lon) {
+            let timestamp = new Date().getTime(); // Cache buster
             try {
                 // Fetch temperature data
-                let weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                let weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&_=${timestamp}`);
                 let weatherData = await weatherResponse.json();
                 document.getElementById('temp').innerText = weatherData.current_weather.temperature + '°C';
             } catch (error) {
@@ -91,7 +92,7 @@
 
             try {
                 // Fetch CO2 level data
-                let co2Response = await fetch('https://api.v2.emissions-api.org/api/v2/carbonmonoxide/average.json?country=USA');
+                let co2Response = await fetch(`https://api.v2.emissions-api.org/api/v2/carbonmonoxide/average.json?country=USA&_=${timestamp}`);
                 let co2Data = await co2Response.json();
                 document.getElementById('co2').innerText = co2Data[0]?.value + ' ppm';
             } catch (error) {
@@ -101,9 +102,23 @@
 
             try {
                 // Fetch Arctic Ice Melt data
-                let iceResponse = await fetch('https://global-warming.org/api/arctic-api');
+                let iceResponse = await fetch(`https://global-warming.org/api/arctic-api?_=${timestamp}`);
                 let iceData = await iceResponse.json();
-                document.getElementById('ice').innerText = iceData.result[0]?.arctic_data + '% decrease';
+                
+                if (iceData.arcticData && iceData.arcticData.data) {
+                    let iceEntries = Object.entries(iceData.arcticData.data);
+                    let latestEntry = iceEntries.filter(entry => entry[1].anom !== -9999).pop(); // Get the most recent valid entry
+                    
+                    if (latestEntry) {
+                        let latestYearMonth = latestEntry[0]; // Year and month
+                        let latestIceValue = latestEntry[1]?.anom; // Get the anomaly value
+                        document.getElementById('ice').innerText = `${latestIceValue}% decrease (${latestYearMonth})`;
+                    } else {
+                        document.getElementById('ice').innerText = 'Data unavailable';
+                    }
+                } else {
+                    document.getElementById('ice').innerText = 'Data unavailable';
+                }
             } catch (error) {
                 console.error('Error fetching Arctic Ice data:', error);
                 document.getElementById('ice').innerText = 'Data unavailable';
