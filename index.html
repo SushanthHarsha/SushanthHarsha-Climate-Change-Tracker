@@ -3,151 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Change Tracker</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(to right, #4facfe, #00f2fe);
-            color: white;
-        }
-        header {
-            background-color: rgba(44, 62, 80, 0.9);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
-            color: black;
-        }
-        .tracker {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px;
-            border-bottom: 2px solid #2c3e50;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .tracker:last-child {
-            border-bottom: none;
-        }
-        footer {
-            text-align: center;
-            padding: 10px;
-            background: rgba(44, 62, 80, 0.9);
-            color: white;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>Climate Change Tracker</h1>
-        <p>Stay updated on environmental changes worldwide</p>
-    </header>
-    
-    <div class="container">
-        <h2>Latest Climate Data</h2>
-        <div class="tracker">
-            <span>Global Temperature</span>
-            <span id="temp">Loading...</span>
-        </div>
-        <div class="tracker">
-            <span>CO2 Levels</span>
-            <span id="co2">Loading...</span>
-        </div>
-        <div class="tracker">
-            <span>Arctic Ice Melt</span>
-            <span id="ice">Loading...</span>
-        </div>
-    </div>
-    
-    <footer>
-        <p>&copy; 2024 Climate Change Tracker. All Rights Reserved.</p>
-    </footer>
-
+    <title>Climate Data Dashboard</title>
     <script>
-        async function fetchClimateData(lat, lon) {
-            let timestamp = new Date().getTime(); // Cache buster
+        async function fetchCO2Levels() {
             try {
-                // Fetch temperature data
-                let weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&_=${timestamp}`);
-                let weatherData = await weatherResponse.json();
-                document.getElementById('temp').innerText = weatherData.current_weather.temperature + '°C';
-            } catch (error) {
-                console.error('Error fetching temperature data:', error);
-                document.getElementById('temp').innerText = 'Data unavailable';
-            }
-
-            try {
-                // Fetch CO2 level data
-                let co2Response = await fetch(`https://api.v2.emissions-api.org/api/v2/carbonmonoxide/average.json?country=USA&_=${timestamp}`);
-                let co2Data = await co2Response.json();
-                document.getElementById('co2').innerText = co2Data[0]?.value + ' ppm';
-            } catch (error) {
-                console.error('Error fetching CO2 data:', error);
-                document.getElementById('co2').innerText = 'Data unavailable';
-            }
-
-            try {
-                // Fetch Arctic Ice Melt data
-                let iceResponse = await fetch(`https://global-warming.org/api/arctic-api?_=${timestamp}`);
-                let iceData = await iceResponse.json();
-                
-                if (iceData.arcticData && iceData.arcticData.data) {
-                    let iceEntries = Object.entries(iceData.arcticData.data);
-                    let latestEntry = iceEntries.filter(entry => entry[1].anom !== -9999).pop(); // Get the most recent valid entry
-                    
-                    if (latestEntry) {
-                        let latestYearMonth = latestEntry[0]; // Year and month
-                        let latestIceValue = latestEntry[1]?.anom; // Get the anomaly value
-                        document.getElementById('ice').innerText = `${latestIceValue}% decrease (${latestYearMonth})`;
-                    } else {
-                        document.getElementById('ice').innerText = 'Data unavailable';
-                    }
+                let response = await fetch('https://api.climate.nasa.gov/co2'); // Replace with correct API
+                let data = await response.json();
+                if (data && data.co2) {
+                    document.getElementById('co2-level').innerText = data.co2 + ' ppm';
                 } else {
-                    document.getElementById('ice').innerText = 'Data unavailable';
+                    throw new Error('CO2 data unavailable');
                 }
             } catch (error) {
-                console.error('Error fetching Arctic Ice data:', error);
-                document.getElementById('ice').innerText = 'Data unavailable';
+                document.getElementById('co2-level').innerText = 'Error fetching CO2 data';
+                console.error(error);
             }
         }
 
-        function requestLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        let lat = position.coords.latitude;
-                        let lon = position.coords.longitude;
-                        fetchClimateData(lat, lon);
-                        setInterval(() => fetchClimateData(lat, lon), 300000); // Refresh every 5 minutes
-                    },
-                    error => {
-                        console.warn('Location access denied. Using default location.');
-                        fetchClimateData(37.7749, -122.4194); // Default: San Francisco
-                        setInterval(() => fetchClimateData(37.7749, -122.4194), 300000);
-                    }
-                );
-            } else {
-                console.warn('Geolocation not supported. Using default location.');
-                fetchClimateData(37.7749, -122.4194); // Default: San Francisco
-                setInterval(() => fetchClimateData(37.7749, -122.4194), 300000);
+        async function fetchArcticIceMelt() {
+            try {
+                let response = await fetch('https://api.climate.nasa.gov/arctic-ice'); // Replace with correct API
+                let data = await response.json();
+                if (data && data.arcticData && data.arcticData.data) {
+                    let lastKey = Object.keys(data.arcticData.data).pop();
+                    let lastValue = data.arcticData.data[lastKey].value;
+                    document.getElementById('arctic-ice-melt').innerText = lastValue + ' million sq km';
+                } else {
+                    throw new Error('Arctic Ice data unavailable');
+                }
+            } catch (error) {
+                document.getElementById('arctic-ice-melt').innerText = 'Error fetching Arctic Ice Melt data';
+                console.error(error);
             }
         }
-        
-        window.onload = requestLocation;
+
+        window.onload = function () {
+            fetchCO2Levels();
+            fetchArcticIceMelt();
+        };
     </script>
+</head>
+<body>
+    <h1>Climate Data Dashboard</h1>
+    <p><strong>CO2 Levels:</strong> <span id="co2-level">Loading...</span></p>
+    <p><strong>Arctic Ice Melt:</strong> <span id="arctic-ice-melt">Loading...</span></p>
 </body>
 </html>
